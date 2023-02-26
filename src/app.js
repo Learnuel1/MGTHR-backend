@@ -3,12 +3,12 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const { CONFIG, CORS_WHITELISTS } = require("./config");
 const { errorHandler } = require("./middlewares/error.middleware");
-const config = require("./config/env");
 const expressWinston = require("express-winston");
 const logger = require("./logger");
+const config = require("./config/env");
 dotenv.config();
-
 const app = express();
+
 app.use(
   cors({
     origin: function (origin, cb) {
@@ -24,7 +24,7 @@ app.use(
     credentials: true,
   })
 );
-// app.use(expressWinston.logger(logger));
+app.use(expressWinston.logger(logger));
 app.disable("etag");
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ limit: "5mb", extended: true }));

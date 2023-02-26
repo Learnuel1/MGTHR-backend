@@ -1,0 +1,27 @@
+Employe 
+  -_id
+  -firstName
+  -lastName 
+  -telephone
+  -email
+  -manager 
+  -status 
+
+
+Account 
+  -_id
+  -username
+  -password
+  -employee ->Employe(_id)
+  -role
+  -refreshToken []
+
+Department
+  -_id
+  -name
+  -status
+
+  Manager
+    _id
+    -employee ->employee(_id)
+    -department ->department(_id)
