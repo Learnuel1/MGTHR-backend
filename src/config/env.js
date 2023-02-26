@@ -7,5 +7,6 @@ const config = {
   TOKEN_SECRETE: process.env.TOKEN_SECRETE,
   REFRESH_TOKEN_SECRETE: process.env.REFRESH_TOKEN_SECRETE,
   NODE_ENV: process.env.NODE_ENV,
+  ERROR_LOG_URL: process.env.ERROR_LOG_URL,
 };
 module.exports = config;

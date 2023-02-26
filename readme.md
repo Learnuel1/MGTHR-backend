@@ -25,6 +25,9 @@ This is the backend API Server for the HR employee and Admin dashboards.
 ## API DOCUMENTATION
 https://documenter.getpostman.com/view/20542554/2s93CNMYgp
 
+## SERVER URL
+https://hr-mgt.onrender.com 
+
 ## Commit Message Pattern Convention
 
 You're to follow this convention when creating a commit message

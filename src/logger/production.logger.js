@@ -14,19 +14,19 @@ exports.proLogger = () => {
     transports: [
       new transports.MongoDB({
         level: "error",
-        collection: "tehlex_error_log",
+        collection: "hr_error_log",
         db: config.ERROR_LOG_URL,
         options: { useUnifiedTopology: true },
       }),
       new transports.MongoDB({
         level: "info",
-        collection: "tehlex_infor_log",
+        collection: "hr_infor_log",
         db: config.ERROR_LOG_URL,
         options: { useUnifiedTopology: true },
       }),
       new transports.MongoDB({
         level: "debug",
-        collection: "tehlex_exception_log",
+        collection: "hr_exception_log",
         db: config.ERROR_LOG_URL,
         options: { useUnifiedTopology: true },
       }),
