@@ -3,7 +3,7 @@ const { CONSTANTS } = require("../config");
 const logger = require("../logger");
 const AccountModel = require("../models/account.model");
 const EmployeeModel = require("../models/employee.model");
-const { ERROR_FIELD } = require("../utils/actions");
+const { ERROR_FIELD, META } = require("../utils/actions");
 const { APIError } = require("../utils/apiError");
 const { isValidEmail } = require("../utils/validation");
 const buildResponse = require("../utils/responsBuilder");
@@ -81,17 +81,21 @@ exports.updateAccount = async (req, res, next) => {
     if(!req.userId) return next(APIError.unauthenticated());
     const details = {};
     for(const key in req.body){
-      if(key !=="employeeId")
-          details[key] == req.body[key];
+      details[key] = req.body[key];
     }
-    if(!details.employeeId) return next(APIError.badRequest("Employee ID is required"));
+    details.id=req.userId;
     //validate email
-    if(details.email)
+    if(details.email){
       if(!isValidEmail(details.email)) return next(APIError.badRequest(`${ERROR_FIELD.INVALID_EMAIL}`));
-    //check if email already exist for am employee
-    const mailExist = await EmployeeModel.findOne({email:details.email}).exec();
-    if(mailExist.length>=2) return next(APIError.badRequest(`${details.email} is not available`)); 
-     const employee = await EmployeeModel.findOneAndUpdate({_id: details.employeeId},{...details},{returnOriginal:false});
+      //check if email already exist for am employee
+      const mailExist = await EmployeeModel.findOne({email:details.email}).exec();
+      if(mailExist?.length>=2) return next(APIError.badRequest(`${details.email} is not available`)); 
+    }
+    const findUser = await AccountModel.findOne({_id:details.id}).exec();
+    if(!findUser) return next(APIError.customError(ERROR_FIELD.NOT_FOUND,400));
+     const employee = await EmployeeModel.findOneAndUpdate({_id: findUser.employee},{...details},{returnOriginal:false});
+     if(!employee) return next(APIError.customError(ERROR_FIELD.NOT_FOUND,400));
+    logger.info("Account updated successfully",{meta:META.ACCOUNT_SEVICE});
     res.status(200).json({success: true, msg: "Account updated successfully"});
   }catch(error) {
     next(error);
@@ -104,6 +108,7 @@ exports.getAccount = async (req, res, next ) => {
     if(!account) return next(APIError.customError(ERROR_FIELD.NOT_FOUND,404));
     const data = buildResponse.buildAccount(account.toObject());
     const response = buildResponse.commonReponse("Found", data, "account");
+    logger.info("Account retrieved successfully",{meta:META.ACCOUNT_SEVICE});
     res.status(200).json(response)
   }catch(error) {
     next(error);
@@ -112,14 +117,17 @@ exports.getAccount = async (req, res, next ) => {
 exports.getAccounts = async (req, res, next) => {
   try {
     if(!req.userId) return next(APIError.unauthenticated());
-    if(req.userRole !== CONSTANTS.USER_TYPES[2] || req.userRole !== CONSTANTS.USER_TYPES[3]) return next(APIError.unauthorized());
-    let accounts = await AccountModel.findOne({_id:req.userId}).populate("employee");
-    console.log(accounts);
-    if(req.userRole === CONSTANTS.USER_TYPES[1])
-    accounts = accounts.filter(ac => ac.role !== CONSTANTS.USER_TYPES[2] || ac.role !== CONSTANTS.USER_TYPES[3]);
+    if(req.userRole.toLowerCase() !== CONSTANTS.USER_TYPES[2] && req.userRole.toLowerCase() !== CONSTANTS.USER_TYPES[3])    
+      return next(APIError.unauthorized());
+    let accounts = await AccountModel.find({}).populate("employee");
+    if(req.userRole.toLowerCase() === CONSTANTS.USER_TYPES[1])
+       accounts = accounts.filter(ac => ac.role !== CONSTANTS.USER_TYPES[2] || ac.role !== CONSTANTS.USER_TYPES[3]);
     if(!accounts) return next(APIError.customError(ERROR_FIELD.NOT_FOUND,404));
-    const data = buildResponse.buildUser(accounts);
+    const data = accounts.map((cur) => { 
+    return  buildResponse.buildAccount(cur.toObject());
+    })
     const response = buildResponse.commonReponse("Found", data, "account");
+    logger.info("Accounts retrieved successfully",{meta:META.ACCOUNT_SEVICE});
     res.status(200).json(response)
   } catch (error) {
     next(error);
@@ -128,20 +136,55 @@ exports.getAccounts = async (req, res, next) => {
 exports.createDepartment = async (req, res, next ) => {
   try {
     if(!req.userRole) return next(APIError.unauthenticated());
-    const {name} = req.body;
+    const {name,manager} = req.body;
     if(!name) return next(APIError.badRequest("Department name is required"));
-    const dept = await DepartmentModel.create({name, status:CONSTANTS.USER_STATUS[1]});
+    if(!manager) return next(APIError.badRequest("Department manager is required"));
+   const dept = await DepartmentModel.create({name,status:CONSTANTS.USER_STATUS[1]});
+   const deptManager = await ManagerModel.create({
+      depatment:dept._id,
+      employee:manager
+   })
+    logger.info("Department created successfully",{meta:META.ACCOUNT_SEVICE});
     res.status(201).json({success:true, msg: "Department created successfully"});
   } catch (error) {
     next(error)
   }
 }
-exports.getDepartment = async (res, req, next ) => {
+exports.updateDepartment = async (req, res, next ) => {
+  try {
+    if(!req.userRole) return next(APIError.unauthenticated());
+    const details= {};
+    for(const key in req.body){
+      if(key.toLowerCase() !=='deptid')
+        details[key] = req.body[key];
+    }
+    if(!req.body.deptId) return next(APIError.badRequest("Department ID is required"));
+    if(details.status){
+      if(!CONSTANTS.USER_STATUS.includes(details.status)) return next(APIError.badRequest("Invalid status data"));
+    }
+    await DepartmentModel.findOneAndUpdate({_id:req.body.deptId},{...details},{returnOriginal: false});
+    if(details.manager){
+       await ManagerModel.findOneAndUpdate({
+        depatment:req.body.deptId,
+        employee:details.manager
+     })
+    }
+    logger.info("Department created successfully",{meta:META.ACCOUNT_SEVICE});
+    res.status(201).json({success:true, msg: "Department created successfully"});
+  } catch (error) {
+    next(error)
+  }
+}
+exports.getDepartment = async (req, res, next ) => {
   try {
     if(!req.userRole) return next(APIError.unauthenticated());
     const dept = await DepartmentModel.find({}).exec();
-    if(!dept) return next(APIError.customError(ERROR_FIELD.NOT_FOUND,404));
-    const response = buildResponse.commonReponse("Found", dept, "department");
+    if(!dept || dept.length === 0) return next(APIError.customError(ERROR_FIELD.NOT_FOUND,404));
+    const data = dept.map((cur) => {
+      return buildResponse.buildDepartment(cur.toObject());
+    })
+    const response = buildResponse.commonReponse("Found", data, "department");
+    logger.info("Department retrieved successfully",{meta:META.ACCOUNT_SEVICE});
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -158,6 +201,7 @@ exports.assignDepartment = async (req, res, next ) => {
     const employeeExist = await EmployeeModel.findOne({_id:employeeId}).exec();
     if(!employeeExist) return next(APIError.customError("Employee dose not exist",400));
     employeeExist.department.push({name:deptExist.name, status:deptExist.status});
+    logger.info("Department assiged successfully",{meta:META.ACCOUNT_SEVICE});
     res.status(200).json({success: true, msg: "Department assigned successfully"});
   } catch (error) {
     next(error);
@@ -175,6 +219,7 @@ exports.createManager = async (req, res, next ) => {
     if(!employeeExist) return next(APIError.customError("Employee dose not exist",400));
     const manager = await ManagerModel.create({employee:employeeId, depatment: deptExist._id});
     console.log(manager)
+    logger.info("Manager created successfully",{meta:META.ACCOUNT_SEVICE});
   res.status(200).json({success:true, msg: "Manager created successfully"});
   } catch (error) {
     next(error);
