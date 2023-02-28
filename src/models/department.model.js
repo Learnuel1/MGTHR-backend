@@ -4,7 +4,9 @@ const { CONSTANTS } = require("../config");
 const DepartmentSchema = new Schema({
   name: {
     type: String,
-    requied: true,
+    required: true,
+    trim: true,
+    unique: true,
   },
   status: {
     type: String,

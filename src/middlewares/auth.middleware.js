@@ -16,7 +16,7 @@ const adminRequired =async (req, res, next) => {
       });
     const isUser = await AccountModel.findOne({refreshToken})
     if (!isUser) return next(APIError.unauthenticated());
-    if (isUser.role.toLowerCase() !== CONSTANTS.USER_TYPES[3]) return next(APIError.unauthorized());
+    if (isUser.role.toLowerCase() !== CONSTANTS.USER_TYPES[2] && isUser.role.toLowerCase() !== CONSTANTS.USER_TYPES[3]) return next(APIError.unauthorized());
     req.userId = isUser._id;
     req.userRole = isUser.role;
     next();
@@ -39,7 +39,6 @@ const userRequired = async (req, res, next) => {
     req.userRole = isUser.role;
     next();
   } catch (error) {
-     
       next(error);
   }
 };
