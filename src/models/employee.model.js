@@ -34,6 +34,9 @@ const EmployeeSchema = new Schema({
     enum: CONSTANTS.USER_STATUS,
     default: CONSTANTS.USER_STATUS[1],
   },
+  department: {
+    type: [Object]
+  }
 },
   {timestamps: true}
 );

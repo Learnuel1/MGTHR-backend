@@ -46,6 +46,7 @@ exports.login = async (req, res, next) => {
     const user = await AccountModel.findOne({email:username}).exec();
     if(!user) return next(APIError.customError("Account doest not exist",400));
     const verify = compareSync(password,user.password);
+    console.log(verify)
     if(!verify) return next(APIError.customError("Incorrect password", 400));
     const payload = { id: user._id, role: user.role };
     const accessToken = jwt.sign(payload, config.TOKEN_SECRETE, { expiresIn: "15m" });
@@ -126,9 +127,9 @@ exports.handleRefreshToken = async (req, res, next) => {
     }
     if(err || foundUser._id.toString() !== decoded.id) return next(APIError.customError(ERROR_FIELD.JWT_EXPIRED,403));
     //Refresh token still valid
-    const payload = {id:decoded.id,type:decoded.type};
+    const payload = {id:foundUser._id,type:foundUser.role};
     const token = jwt.sign(payload, config.TOKEN_SECRETE, {expiresIn:"15m"});
-    const newRefreshToken = jwt.sign({id:foundUser.id,type:foundUser.type},config.REFRESH_TOKEN_SECRETE,{expiresIn:"30m"});
+    const newRefreshToken = jwt.sign(payload,config.REFRESH_TOKEN_SECRETE,{expiresIn:"30m"});
     foundUser.refreshToken = [...newRefreshTokenArr,newRefreshToken];
     foundUser.save(); 
     res.cookie("jwt",newRefreshToken, {httpOnly:true, sameSite: 'None', secure:true});

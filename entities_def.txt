@@ -6,7 +6,7 @@ Employe
   -email
   -manager 
   -status 
-
+  -department []
 
 Account 
   -_id
