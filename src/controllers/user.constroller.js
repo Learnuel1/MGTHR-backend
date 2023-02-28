@@ -64,6 +64,7 @@ exports.createAccount = async (req, res, next) => {
     //encrypt password
     const hashedPasword = hashSync(CONSTANTS.USER_PASSWORD[0],10);
     const user ={firstName, lastName, telephone,email, role: CONSTANTS.USER_TYPES[0], status: CONSTANTS.USER_STATUS[1], password:hashedPasword}
+    if(req.body.managerId) user.manager = req.body.managerId;
     //create employee
     const employee = await EmployeeModel.create({...user});
     //create account
@@ -217,8 +218,7 @@ exports.createManager = async (req, res, next ) => {
     if(!deptExist) return next(APIError.customError("Department does not exist",400));
     const employeeExist = await EmployeeModel.findOne({_id:employeeId}).exec();
     if(!employeeExist) return next(APIError.customError("Employee dose not exist",400));
-    const manager = await ManagerModel.create({employee:employeeId, depatment: deptExist._id});
-    console.log(manager)
+    await ManagerModel.create({employee:employeeId, depatment: deptExist._id});
     logger.info("Manager created successfully",{meta:META.ACCOUNT_SEVICE});
   res.status(200).json({success:true, msg: "Manager created successfully"});
   } catch (error) {
