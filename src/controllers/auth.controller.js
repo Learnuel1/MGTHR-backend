@@ -113,7 +113,7 @@ exports.handleRefreshToken = async (req, res, next) => {
       if(err) return next(APIError.customError(ERROR_FIELD.INVALID_TOKEN, 403));
       const usedToken =await AccountModel.findOne({_id:decoded.id}).exec();
       usedToken.refreshToken =[];
-      await usedToken.save();
+      usedToken.save();
     });
     logger.info("Token reuse detected", {meta: "refreshtoken-service"});
     return next(APIError.customError(ERROR_FIELD.INVALID_TOKEN,403));
@@ -123,7 +123,7 @@ exports.handleRefreshToken = async (req, res, next) => {
   jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRETE, async (err, decoded) => {
     if(err){
       foundUser.refreshToken =[...newRefreshTokenArr];
-      await AccountModel.save();
+      foundUser.save();
     }
     if(err || foundUser._id.toString() !== decoded.id) return next(APIError.customError(ERROR_FIELD.JWT_EXPIRED,403));
     //Refresh token still valid
