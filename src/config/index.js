@@ -4,7 +4,7 @@ exports.CONFIG = {
   APP_NAME: "HR Administration",
 };
 
-exports.CORS_WHITELISTS = [`localhost:${config.SERVER_PORT || 8001}`,` ${config.FRONTEND_ORIGIN_URL}`];
+exports.CORS_WHITELISTS = [`localhost:${config.SERVER_PORT || 8001}`,` ${config.FRONTEND_ORIGIN_URL}`, `localhost:5173`];
 
 exports.CONSTANTS = {
   USER_TYPES: [ "user", "manager", "admin", "super"],
