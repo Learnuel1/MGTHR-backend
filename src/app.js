@@ -5,7 +5,6 @@ const { CONFIG, CORS_WHITELISTS } = require("./config");
 const { errorHandler } = require("./middlewares/error.middleware");
 const expressWinston = require("express-winston");
 const logger = require("./logger");
-const config = require("./config/env");
 dotenv.config();
 const app = express();
 
@@ -19,7 +18,6 @@ app.use(
       }
       return cb(new Error("Not allowed by CORS"));
     },
-    // origin: config.FRONTEND_ORIGIN_URL,
     methods: ["GET", "PUT", "POST", "DELETE", "PATCH"],
     credentials: true,
   })
