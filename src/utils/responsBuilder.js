@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const buildUser = (userObj) => {
   const { _id, __v, password,refreshToken, ...data } = userObj;
   return data;

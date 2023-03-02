@@ -34,7 +34,7 @@ exports.login = async (req, res, next) => {
   }
 
   if(foundUser){
-    jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRETE,async (err, decoded) => {
+    jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRETE,async (err, _decoded) => {
       if(err) return next(APIError.customError(ERROR_FIELD.INVALID_TOKEN,403));
       logger.info("Relogin detected",{meta: META.AUTH_SERVICE})
       return next(APIError.customError("There is active session on this account, logout first",403));
@@ -46,7 +46,6 @@ exports.login = async (req, res, next) => {
     const user = await AccountModel.findOne({email:username}).exec();
     if(!user) return next(APIError.customError("Account doest not exist",400));
     const verify = compareSync(password,user.password);
-    console.log(verify)
     if(!verify) return next(APIError.customError("Incorrect password", 400));
     const payload = { id: user._id, role: user.role };
     const accessToken = jwt.sign(payload, config.TOKEN_SECRETE, { expiresIn: "15m" });
