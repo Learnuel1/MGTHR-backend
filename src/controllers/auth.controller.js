@@ -65,7 +65,7 @@ exports.login = async (req, res, next) => {
     );
     res.cookie("jwt", newRefreshToken, {
       httpOnly: false,
-      secure: true,
+      secure: false,
       sameSite: "none",
       // maxAge:24*60*60*1000
     });
