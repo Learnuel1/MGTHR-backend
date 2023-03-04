@@ -131,7 +131,7 @@ exports.handleRefreshToken = async (req, res, next) => {
     const newRefreshToken = jwt.sign(payload,config.REFRESH_TOKEN_SECRETE,{expiresIn:"30m"});
     foundUser.refreshToken = [...newRefreshTokenArr,newRefreshToken];
     foundUser.save(); 
-    res.cookie("jwt",newRefreshToken, {httpOnly:true, sameSite: 'None', secure:true});
+    res.cookie("jwt",newRefreshToken, {httpOnly:true, sameSite: 'None', secure:false});
     res.status(200).json({success:true, token, refreshToken:newRefreshToken});
   });
 };
